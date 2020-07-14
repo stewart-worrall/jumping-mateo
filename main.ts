@@ -180,27 +180,6 @@ c a 8 f c c b a f f c b c c c .
 . . . . . . . . . . . c c . . . 
 . . . . . . . . . . . c c . . . 
 `, true)
-    for (let value of scene.getTilesByType(10)) {
-        coin = sprites.create(img`
-. . . . . . . . . . . . . . . . 
-. . . . . . . . . . . . . . . . 
-. . . . . . . 5 . . . . . . . . 
-. . . . . . 5 5 5 . . . . . . . 
-. . . . . 5 5 5 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 5 5 5 . . . . . . 
-. . . . . . 5 5 5 . . . . . . . 
-. . . . . . . 5 . . . . . . . . 
-. . . . . . . . . . . . . . . . 
-. . . . . . . . . . . . . . . . 
-. . . . . . . . . . . . . . . . 
-`, SpriteKind.coin)
-        scene.place(value, coin)
-    }
     if (num == 1) {
         scene.setTileMap(img`
 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
@@ -208,7 +187,7 @@ c a 8 f c c b a f f c b c c c .
 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
 . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 
-. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 1 
+. . . . . . . . . . . . . . . . . . . . . . a . . . . . . . . 1 
 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 7 
 e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e e 
 `)
@@ -564,6 +543,24 @@ c b b b b b b b b c b c b b b c
         myTile.place(mySprite)
         effects.blizzard.startScreenEffect()
     }
+    scene.setTile(10, img`
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . 5 . . . . . . . . 
+. . . . . . 5 5 5 . . . . . . . 
+. . . . . 5 5 5 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 5 5 5 . . . . . . 
+. . . . . . 5 5 5 . . . . . . . 
+. . . . . . . 5 . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+`, true)
     game.splash("Level " + num)
     facingRight = 1
     animation.setAction(mySprite, ActionKind.Idle_right)
@@ -572,9 +569,12 @@ controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
     facingRight = 0
 })
 controller.combos.attachCombo("d+b", function () {
-    if (level < 10) {
-        level += 1
-        setLevel(level, mySprite)
+	
+})
+scene.onHitTile(SpriteKindLegacy.Player, 10, function (sprite) {
+    if (gotcoin == 0) {
+        info.changeScoreBy(1)
+        gotcoin = 1
     }
 })
 scene.onHitTile(SpriteKindLegacy.Player, 3, function (sprite) {
@@ -600,6 +600,7 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
 })
 scene.onHitTile(SpriteKindLegacy.Player, 1, function (sprite) {
     if (level < 10) {
+        gotcoin = 0
         level += 1
         setLevel(level, mySprite)
     } else {
@@ -905,9 +906,9 @@ let anim_idle_left: animation.Animation = null
 let anim_idle_right: animation.Animation = null
 let facingRight = 0
 let myTile: tiles.Tile = null
-let coin: Sprite = null
 let mySprite: Sprite = null
 let level = 0
+let gotcoin = 0
 game.setDialogCursor(img`
 . . . . . . . . . . . . . . . . 
 . . . . . . . . . . . . . . . . 
@@ -927,11 +928,112 @@ game.setDialogCursor(img`
 . . . . . . 4 . . 4 . . . . . . 
 `)
 game.splash("Jumping Mateo")
+gotcoin = 0
 info.setLife(5)
 level = 1
 info.setScore(0)
 intitPlayer()
 setLevel(level, mySprite)
+game.onUpdate(function () {
+    mySprite.x += controller.dx()
+})
+game.onUpdate(function () {
+    if (mySprite.isHittingTile(CollisionDirection.Bottom)) {
+        if (controller.right.isPressed()) {
+            animation.setAction(mySprite, ActionKind.Walking_right)
+        } else if (controller.left.isPressed()) {
+            animation.setAction(mySprite, ActionKind.Walking_left)
+        } else {
+            if (facingRight == 1) {
+                animation.setAction(mySprite, ActionKind.Idle_right)
+            } else {
+                animation.setAction(mySprite, ActionKind.Idle_left)
+            }
+        }
+    } else {
+        if (mySprite.vy < 0) {
+            if (facingRight == 1) {
+                mySprite.setImage(img`
+. . . . . . . . . . . . . . . . 
+. . . . . e e e e e e e . . . . 
+. . . . e e e e e e e e e . . . 
+. . . . e e e e d e e e e . . . 
+. . . . e e e d f d d f e . . . 
+. . . . e d e d f d d f . . . . 
+. . . . e d d d d d d d . . . . 
+. . . . . e d d d d d d . . . . 
+. . . . . . 2 4 4 4 . . . . . . 
+. . . . . 2 4 4 4 4 2 . . . . . 
+. . . d d . 4 4 4 4 d . . . . . 
+. . . d d . 4 4 4 4 d . . . . . 
+. . . . . . e e e e . . . . . . 
+. . . . . . e . . e . . . . . . 
+. . . . . e . . 2 . . . . . . . 
+. . . . 2 . . . . . . . . . . . 
+`)
+            } else {
+                mySprite.setImage(img`
+. . . . . . . . . . . . . . . . 
+. . . . e e e e e e e . . . . . 
+. . . e e e e e e e e e . . . . 
+. . . e e e e d e e e e . . . . 
+. . . e f d d f d e e e . . . . 
+. . . . f d d f d e d e . . . . 
+. . . . d d d d d d d e . . . . 
+. . . . d d d d d d e . . . . . 
+. . . . . . 4 4 4 2 . . . . . . 
+. . . . . 2 4 4 4 4 2 . . . . . 
+. . . . . d 4 4 4 4 . d d . . . 
+. . . . . d 4 4 4 4 . d d . . . 
+. . . . . . e e e e . . . . . . 
+. . . . . . e . . e . . . . . . 
+. . . . . . . 2 . . e . . . . . 
+. . . . . . . . . . . 2 . . . . 
+`)
+            }
+        } else {
+            if (facingRight == 1) {
+                mySprite.setImage(img`
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . e e e e e e e . . . . 
+. . . . e e e e e e e e e . . . 
+. . . . e e e e d e e e e . . . 
+. . . . e e e d d d d d e . . . 
+. . . . e d e d f d d f . . . . 
+. . . . e d d d f d d f . . . . 
+. . . . . e d d d d d d . . . . 
+. . . . . 2 4 4 4 4 2 . . . . . 
+. . . . . d d 4 4 4 . d d . . . 
+. . . . . d d 4 4 4 . d d . . . 
+. . . . . . e e e e . . . . . . 
+. . . . . . e . . e . . . . . . 
+. . . . . . . 2 . . 2 . . . . . 
+. . . . . . . . . . . . . . . . 
+`)
+            } else {
+                mySprite.setImage(img`
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . e e e e e e e . . . . . 
+. . . e e e e e e e e e . . . . 
+. . . e e e e d e e e e . . . . 
+. . . e d d d d d e e e . . . . 
+. . . . f d d f d e d e . . . . 
+. . . . f d d f d d d e . . . . 
+. . . . d d d d d d e . . . . . 
+. . . . . 2 4 4 4 4 2 . . . . . 
+. . . d d . 4 4 4 d d . . . . . 
+. . . d d . 4 4 4 d d . . . . . 
+. . . . . . e e e e . . . . . . 
+. . . . . . e . . e . . . . . . 
+. . . . . 2 . . 2 . . . . . . . 
+. . . . . . . . . . . . . . . . 
+`)
+            }
+        }
+    }
+})
 game.onUpdate(function () {
     if (level == 10) {
         if (mySprite.y > 394) {
@@ -1434,106 +1536,6 @@ f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f 
 `)
             effects.blizzard.endScreenEffect()
             mySprite.ay = 150
-        }
-    }
-})
-game.onUpdate(function () {
-    mySprite.x += controller.dx()
-})
-game.onUpdate(function () {
-    if (mySprite.isHittingTile(CollisionDirection.Bottom)) {
-        if (controller.right.isPressed()) {
-            animation.setAction(mySprite, ActionKind.Walking_right)
-        } else if (controller.left.isPressed()) {
-            animation.setAction(mySprite, ActionKind.Walking_left)
-        } else {
-            if (facingRight == 1) {
-                animation.setAction(mySprite, ActionKind.Idle_right)
-            } else {
-                animation.setAction(mySprite, ActionKind.Idle_left)
-            }
-        }
-    } else {
-        if (mySprite.vy < 0) {
-            if (facingRight == 1) {
-                mySprite.setImage(img`
-. . . . . . . . . . . . . . . . 
-. . . . . e e e e e e e . . . . 
-. . . . e e e e e e e e e . . . 
-. . . . e e e e d e e e e . . . 
-. . . . e e e d f d d f e . . . 
-. . . . e d e d f d d f . . . . 
-. . . . e d d d d d d d . . . . 
-. . . . . e d d d d d d . . . . 
-. . . . . . 2 4 4 4 . . . . . . 
-. . . . . 2 4 4 4 4 2 . . . . . 
-. . . d d . 4 4 4 4 d . . . . . 
-. . . d d . 4 4 4 4 d . . . . . 
-. . . . . . e e e e . . . . . . 
-. . . . . . e . . e . . . . . . 
-. . . . . e . . 2 . . . . . . . 
-. . . . 2 . . . . . . . . . . . 
-`)
-            } else {
-                mySprite.setImage(img`
-. . . . . . . . . . . . . . . . 
-. . . . e e e e e e e . . . . . 
-. . . e e e e e e e e e . . . . 
-. . . e e e e d e e e e . . . . 
-. . . e f d d f d e e e . . . . 
-. . . . f d d f d e d e . . . . 
-. . . . d d d d d d d e . . . . 
-. . . . d d d d d d e . . . . . 
-. . . . . . 4 4 4 2 . . . . . . 
-. . . . . 2 4 4 4 4 2 . . . . . 
-. . . . . d 4 4 4 4 . d d . . . 
-. . . . . d 4 4 4 4 . d d . . . 
-. . . . . . e e e e . . . . . . 
-. . . . . . e . . e . . . . . . 
-. . . . . . . 2 . . e . . . . . 
-. . . . . . . . . . . 2 . . . . 
-`)
-            }
-        } else {
-            if (facingRight == 1) {
-                mySprite.setImage(img`
-. . . . . . . . . . . . . . . . 
-. . . . . . . . . . . . . . . . 
-. . . . . e e e e e e e . . . . 
-. . . . e e e e e e e e e . . . 
-. . . . e e e e d e e e e . . . 
-. . . . e e e d d d d d e . . . 
-. . . . e d e d f d d f . . . . 
-. . . . e d d d f d d f . . . . 
-. . . . . e d d d d d d . . . . 
-. . . . . 2 4 4 4 4 2 . . . . . 
-. . . . . d d 4 4 4 . d d . . . 
-. . . . . d d 4 4 4 . d d . . . 
-. . . . . . e e e e . . . . . . 
-. . . . . . e . . e . . . . . . 
-. . . . . . . 2 . . 2 . . . . . 
-. . . . . . . . . . . . . . . . 
-`)
-            } else {
-                mySprite.setImage(img`
-. . . . . . . . . . . . . . . . 
-. . . . . . . . . . . . . . . . 
-. . . . e e e e e e e . . . . . 
-. . . e e e e e e e e e . . . . 
-. . . e e e e d e e e e . . . . 
-. . . e d d d d d e e e . . . . 
-. . . . f d d f d e d e . . . . 
-. . . . f d d f d d d e . . . . 
-. . . . d d d d d d e . . . . . 
-. . . . . 2 4 4 4 4 2 . . . . . 
-. . . d d . 4 4 4 d d . . . . . 
-. . . d d . 4 4 4 d d . . . . . 
-. . . . . . e e e e . . . . . . 
-. . . . . . e . . e . . . . . . 
-. . . . . 2 . . 2 . . . . . . . 
-. . . . . . . . . . . . . . . . 
-`)
-            }
         }
     }
 })

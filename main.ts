@@ -1554,5 +1554,6 @@ game.onUpdate(function () {
     if (mySprite.overlapsWith(coin2)) {
         info.changeScoreBy(3)
         coin2.destroy(effects.smiles, 5000)
+        music.baDing.play()
     }
 })

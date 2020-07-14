@@ -599,6 +599,8 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     facingRight = 1
 })
 scene.onHitTile(SpriteKindLegacy.Player, 1, function (sprite) {
+    info.changeScoreBy(1)
+    info.changeLifeBy(1)
     if (level < 10) {
         gotcoin = 0
         level += 1

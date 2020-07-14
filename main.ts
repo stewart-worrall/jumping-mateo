@@ -543,24 +543,45 @@ c b b b b b b b b c b c b b b c
         myTile.place(mySprite)
         effects.blizzard.startScreenEffect()
     }
+    for (let value of scene.getTilesByType(10)) {
+        coin2 = sprites.create(img`
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . 5 . . . . . . . . 
+. . . . . . 5 5 5 . . . . . . . 
+. . . . . 5 5 5 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 4 5 5 . . . . . . 
+. . . . . 5 5 5 5 5 . . . . . . 
+. . . . . . 5 5 5 . . . . . . . 
+. . . . . . . 5 . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+`, SpriteKind.coin)
+        scene.place(value, coin2)
+    }
     scene.setTile(10, img`
 . . . . . . . . . . . . . . . . 
 . . . . . . . . . . . . . . . . 
-. . . . . . . 5 . . . . . . . . 
-. . . . . . 5 5 5 . . . . . . . 
-. . . . . 5 5 5 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 4 5 5 . . . . . . 
-. . . . . 5 5 5 5 5 . . . . . . 
-. . . . . . 5 5 5 . . . . . . . 
-. . . . . . . 5 . . . . . . . . 
 . . . . . . . . . . . . . . . . 
 . . . . . . . . . . . . . . . . 
 . . . . . . . . . . . . . . . . 
-`, true)
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+. . . . . . . . . . . . . . . . 
+`, false)
     game.splash("Level " + num)
     facingRight = 1
     animation.setAction(mySprite, ActionKind.Idle_right)
@@ -571,22 +592,12 @@ controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
 controller.combos.attachCombo("d+b", function () {
 	
 })
-scene.onHitTile(SpriteKindLegacy.Player, 10, function (sprite) {
-    if (gotcoin == 0) {
-        info.changeScoreBy(1)
-        gotcoin = 1
-    }
-})
 scene.onHitTile(SpriteKindLegacy.Player, 3, function (sprite) {
     info.changeLifeBy(-1)
     setLevel(level, mySprite)
     if (info.life() == 0) {
         game.over(false, effects.dissolve)
     }
-})
-sprites.onOverlap(SpriteKind.Player, SpriteKind.coin, function (sprite, otherSprite) {
-    info.changeScoreBy(3)
-    otherSprite.destroy(effects.smiles, 5000)
 })
 controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
     if (mySprite.isHittingTile(CollisionDirection.Bottom)) {
@@ -602,7 +613,6 @@ scene.onHitTile(SpriteKindLegacy.Player, 1, function (sprite) {
     info.changeScoreBy(1)
     info.changeLifeBy(1)
     if (level < 10) {
-        gotcoin = 0
         level += 1
         setLevel(level, mySprite)
     } else {
@@ -907,10 +917,10 @@ let anim_walk_right: animation.Animation = null
 let anim_idle_left: animation.Animation = null
 let anim_idle_right: animation.Animation = null
 let facingRight = 0
+let coin2: Sprite = null
 let myTile: tiles.Tile = null
 let mySprite: Sprite = null
 let level = 0
-let gotcoin = 0
 game.setDialogCursor(img`
 . . . . . . . . . . . . . . . . 
 . . . . . . . . . . . . . . . . 
@@ -930,7 +940,6 @@ game.setDialogCursor(img`
 . . . . . . 4 . . 4 . . . . . . 
 `)
 game.splash("Jumping Mateo")
-gotcoin = 0
 info.setLife(5)
 level = 1
 info.setScore(0)
@@ -1539,5 +1548,11 @@ f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f f 
             effects.blizzard.endScreenEffect()
             mySprite.ay = 150
         }
+    }
+})
+game.onUpdate(function () {
+    if (mySprite.overlapsWith(coin2)) {
+        info.changeScoreBy(3)
+        coin2.destroy(effects.smiles, 5000)
     }
 })
